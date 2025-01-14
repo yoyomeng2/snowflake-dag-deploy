@@ -1,0 +1,40 @@
+dags:
+  - name: mike_example_dag
+    disable: false
+    # cron every 1 minute
+    schedule: "0/1 * * * *"
+    schedule_timezone: "America/Chicago"
+    options:
+      comment: "This is a test DAG"
+    tasks:
+      - name: createOrReplaceTable
+        sql: "CREATE OR REPLACE TABLE my_table (load_date TIMESTAMP_LTZ, name STRING);"
+        warehouse: mike_share_wh
+      - name: insert 
+        sql: "insert into my_table values (current_timestamp(), 'test');"
+        warehouse: mike_share_wh
+        predecessors:
+          - createOrReplaceTable
+      - name: query
+        sql: "SELECT * FROM my_table;"
+        warehouse: mike_share_wh
+        is_finalizer: true
+    action: drop
+  - name: mike_example_dag2
+    schedule: "1 MINUTES"
+    options:
+      comment: "This is a test DAG"
+    tasks:
+      - name: createOrReplaceTable
+        sql: "CREATE OR REPLACE TABLE my_table2 (load_date TIMESTAMP_LTZ, name STRING);"
+        warehouse: mike_share_wh
+      - name: insert 
+        sql: "insert into my_table2 values (current_timestamp(), 'test');"
+        warehouse: mike_share_wh
+        predecessors:
+          - createOrReplaceTable
+      - name: query
+        sql: "SELECT * FROM my_table2;"
+        warehouse: mike_share_wh
+        is_finalizer: true
+    action: drop
